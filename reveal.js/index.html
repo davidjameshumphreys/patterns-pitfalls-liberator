@@ -1,0 +1,357 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Patterns &amp; Pitfalls in Liberator</title>
+  <meta name="description" content="A presentation on the Clojure library Liberator describing some use-cases.">
+  <meta name="author" content="David James Humphreys">
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
+  <link rel="stylesheet" href="./css/octicons.css"/>
+  <link rel="stylesheet" href="./css/reveal.css">
+  <link rel="stylesheet" href="./css/theme/simple.css" id="theme">
+  <link rel="stylesheet" href="./css/mine.css"/>
+  <link rel="stylesheet" href="./lib/css/zenburn.css">
+
+  <style>
+    .await {display: none}
+  </style>
+  <!-- Printing and PDF exports -->
+  <script>
+    var link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.type = 'text/css';
+    link.href = window.location.search.match(/print-pdf/gi) ? 'css/print/pdf.css' : 'css/print/paper.css';
+    document.getElementsByTagName('head')[0].appendChild(link);
+  </script>
+  <!--[if lt IE 9]>
+  <script src="./lib/js/html5shiv.js"></script><![endif]-->
+</head>
+
+<body>
+<div class="reveal">
+  <div class="slides">
+    <section id="title">
+      <h2>Patterns &amp; Pitfalls in<br/>
+        Liberator</h2>
+      <p>
+        <small>David James Humphreys (Juxter) [<a href="http://twitter.com/davidjumphreys">@davidjhumphreys</a>]</small><br/>
+        <small><span class="octicon octicon-mark-github" style="font-family: 'octicons';"></span>.com/davidjameshumphreys [<a href="https://davidjameshumphreys.github.io/patterns-pitfalls-liberator/">slides</a>]</small>
+      </p>
+      <img src="../images/juxt-w.png" width="200" style="border: 0; -webkit-box-shadow: none"/>
+    </section>
+    <section id="liberator">
+      <h2>What is Liberator?</h2>
+      <a href="https://github.com/clojure-liberator/liberator/">
+        <span class="octicon octicon-mark-github" style="font-family: 'octicons';"></span>
+        /Clojure-liberator/liberator
+      </a>
+      <p>A brilliant library that follows the HTTP graph</p>
+      <ul>
+        <li>Hook in to the places you need</li>
+        <li>Sensible defaults for the others</li>
+        <li>So...</li>
+      </ul>
+      <!-- https://twitter.com/ordnungswprog/status/648408910416740352 -->
+      <div class="fragment"><img src="../images/ordnungswprog.png" width="300"/></div>
+    </section>
+    <section id="graph">
+      <div class="stretch" style="box-shadow: 2px; -webkit-box-shadow: #00003f">
+        <object data="../images/decision-graph.svg" width="100%" height="100%">
+          <img src="../images/decision-graph.svg" type="image/svg+xml" />
+        </object>
+      </div>
+      <p>... just find the parts that you need to hook in.</p>
+      <aside class="notes">
+        <ul>
+          <li>This is generated from the source</li>
+          <li>It gets easier to read it later on</li>
+        </ul>
+      </aside>
+    </section>
+    <section id="flexibility">
+      <h2>Flexibility vs. Flexibility</h2>
+      <p>There is a lot to configure to set up a basic route.</p>
+      <ul>
+        <li>It follows the HTTP spec closely (very, very closely)</li>
+        <li>Gives fine-grained control over each step</li>
+        <li>Map of functions</li>
+        <li>Return maps of data to chain to the next step in the graph</li>
+        <li>A lot of preamble to get going*</li>
+      </ul>
+      <p>* if you are really impatient!</p>
+    </section>
+    <section id="chaining">
+      <h2>Chaining the data</h2>
+
+      <p>The returned map is merged into the functions that occur afterwards.*</p>
+      <pre><code>
+(def simple-get
+  (resource {:available-media-types ["text/html"]
+             ;; do your db call in here
+             :exists?               (fn [ctx] {:data "My data"})
+             ;; the keys are merged in
+             :handle-ok             (fn [{:keys [data] :as ctx}]
+                                      data)}))
+      </code></pre>
+      <p>* with a few exceptions and ways to prevent this.</p>
+    </section>
+    <section id="patterns">
+      <h2>Some patterns:</h2>
+      <ul>
+        <li>Always Be Coercing</li>
+        <li>Accepting &amp; Output Types</li>
+        <li>GET/POST patterns</li>
+        <li>Databases & resources on the request</li>
+        <li>Authentication</li>
+        <li>Build your own patterns</li>
+        <li>Use <code>(fn render [args])</code></li>
+      </ul>
+
+      <aside class="notes">
+        <ul>
+          <li>Sanitise your input, validate your output</li>
+          <li>Have an idea about your defaults, build from there</li>
+          <li>Build your pattern maps, merge them to make your resource</li>
+          <li>(fn name [args]), your stacktraces will payoff later</li>
+        </ul>
+      </aside>
+    </section>
+    <section id="basic-get">
+      <h2>A Basic Get</h2>
+      <pre><code>
+(defn- json? [ctx]
+  (-> ctx
+      :representation
+      :media-type
+      (= "application/json")))
+
+(def simple-get-with-type
+  (resource {:available-media-types ["text/html" "application/json"]
+             :allowed-methods       [:get]
+             :exists?               (fn exists [ctx] {:data "My data"})
+             :handle-ok             (fn ok [{:keys [data] :as ctx}]
+                                      (if (json? ctx)
+                                        {:data data
+                                         :is-json true}
+                                        data))}))
+      </code></pre>
+    </section>
+    <section id="coercing">
+      <h2>Coercing:</h2>
+      <ul>
+        <li>Use some library to coerce input data into the correct format</li>
+        <li>Use it everywhere (path- & query-params)</li>
+        <li>All input types form-encoded, JSON &amp;c*</li>
+        <li>There are so many bad things one can do with input</li>
+      </ul>
+      <p><a href="https://github.com/Prismatic/schema"><span class="octicon octicon-mark-github"
+                                                          style="font-family: 'octicons';"></span>/Prismatic/schema</a>
+        is a great choice</p>
+      <p>*Use some middleware to make coercion easier</p>
+    </section>
+    <section id="coercing-continued">
+      <p>Schema/check &amp; Liberator</p>
+      <pre><code data-language="clojure" data-trim="yes">
+(defn make-malformed-coercer
+  "A wrapper for checking the malformed state using Schema coercers.
+  Liberator malformed expects [malformed? {:some data}] to be returned
+  from the function."
+  [coerce-fn]
+  (fn malformed? [ctx]
+    (let [result (coerce-fn ctx)]
+      (log/info result)
+      (if (error? result)
+        [true (merge result
+                     (try (negotiate-media-type ctx)
+                          (catch ProtocolException _
+                            {:representation
+                              {:media-type "application/json"}})))]
+        [false {:coerced-params result}]))))
+      </code></pre>
+      <p>little hack to render a result</p>
+      <aside class="notes">
+        <ul>
+          <li>Write this pattern once to re-use (assuming you want to render a 400)</li>
+          <li>Liberator expects <code>[malformed? data-to-merge]</code></li>
+          <li>An example of being too strict with the FSM tree.</li>
+        </ul>
+      </aside>
+    </section>
+    <section id="with-malformed">
+      <h2>Define your patterns</h2>
+      <pre><code data-language="clojure">
+(defn do-get
+  "A simple get endpoint."
+  [check-vals-coercer exists? render & {:as overrides}]
+  (merge {:available-media-types
+              ["text/html" "application/json"]
+          :allowed-methods [:get]
+          :malformed?
+              (make-malformed-coercer check-vals-coercer)
+          :exists?         exists?
+          :handle-ok       render}
+         overrides))
+      </code></pre>
+    </section>
+    <section id="basic-post">
+      <h2>A basic POST</h2>
+      <p>Using a similar pattern</p>
+      <pre><code data-language="clojure" data-trim="yes">
+{:malformed?     (make-malformed-coercer check-vals-coercer)
+ :exists?        exists?
+ :post!          post!
+ :post-redirect? post-redirect?}
+      </code></pre>
+      <aside class="notes"></aside>
+    </section>
+    <section id="databases">
+      <h2>Databases &amp; other resources</h2>
+      <p>Add all of your context-sensitive references into <code>request</code></p>
+      <ul>
+        <li>Environmental settings</li>
+        <ul>
+          <li>Databases</li>
+          <li>Queues</li>
+          <li>Render settings</li>
+        </ul>
+        <li>Bidi<span class="fragment" style="font-size: 0.5em;">!!!!!!1111one</span></li>
+      </ul>
+      <p>Use middleware to do it.</p>
+    </section>
+    <section id="middleware-example">
+      <h2>Middleware</h2>
+      <p>No <code>*datbase*</code> globals please</p>
+      <pre><code data-language="clojure" data-trim="yes" class="stretch">
+(defn the-application
+  "All of the webapp routes and middleware. By defining in this way we
+   can pass in various settings (i.e. to add a database create a middleware
+   to wrap the request)"
+  [component-settings]
+  (-> #'server-routes
+      (wrap-trace :ui true)  ;; <- liberator trace
+      (wrap-renderer (-> component-settings :render :global-vars))
+      (wrap-database (-> component-settings :db))
+      wrap-keyword-params
+      wrap-params
+      wrap-json-params
+      (wrap-bidi-handlers build-routes handlers)))
+      </code></pre>
+      <p>Maybe use components</p>
+    </section>
+    <section id="pitfalls">
+      <h2>Pitfalls of Flexibility</h2>
+      <ul>
+        <li>Sensible* defaults</li>
+        <li>Headers?</li>
+        <ul>
+          <li>Access-Control-Allow-Origin</li>
+          <li>Cache-Control</li>
+          <li>Sessions &amp; Cookies</li>
+          <li>&amp;c.</li>
+        </ul>
+      </ul>
+    </section>
+    <section id="more-pitfalls">
+      <h2>Pitfalls of the graph</h2>
+      <p><code>service-available?</code> happens first, what about long requests?</p>
+      <aside class="notes">It's a tree.
+      Remember, you can't go back.</aside>
+    </section>
+    <section id="competition">
+      <h2>Other libraries</h2>
+      <ul>
+        <li>Pedestal</li>
+        <ul>
+          <li>Interceptors</li>
+          <li>More secure defaults</li>
+        </ul>
+        <li>metosin/compojure-api</li>
+        <ul>
+          <li>APIs FTW</li>
+        </ul>
+        <li>Pedestal-swagger</li>
+        <ul>
+          <li>Frankie-ware</li>
+        </ul>
+        <li>Yada</li>
+      </ul>
+    </section>
+    <section id="fin">
+      <h2><span>Fin</span><span class="fragment">)</span></h2>
+      <p>
+        <small><span class="octicon octicon-mark-github" style="font-family: 'octicons';"></span>.com/davidjameshumphreys
+          [<a href="https://davidjameshumphreys.github.io/patterns-pitfalls-liberator/">slides</a>]
+        </small></p>
+    </section>
+  </div>
+
+  <!--This is only visible after the title slide see code hideOnIndexSlide below-->
+  <div class='footer'>
+    <img src="../images/juxt-w-small.png" width="180"/>
+  </div>
+</div>
+
+<script src="./lib/js/head.min.js"></script>
+<script src="./js/reveal.js"></script>
+<script>
+  Reveal.initialize({
+    controls: true,
+    progress: true,
+    history: true,
+    center: true,
+    mouseWheel: false,
+    transition: 'slide',
+
+    dependencies: [
+      {
+        src: 'lib/js/classList.js', condition: function () {
+        return !document.body.classList;
+      }
+      },
+      {
+        src: 'plugin/highlight/highlight.js', async: true, condition: function () {
+        return !!document.querySelector('pre code');
+      }, callback: function () {
+        hljs.configure({languages: ['clojure']});
+        hljs.initHighlightingOnLoad();
+      }
+      },
+      {src: 'plugin/zoom-js/zoom.js', async: true},
+      {src: 'plugin/notes/notes.js', async: true}
+    ]
+  });
+
+  /** Hide the logo footer when on the start slide only.
+   * @param event the Reveal event
+   */
+  var hideOnIndexSlide = function(event){
+    console.log(event);
+    document.querySelector('.reveal .footer').style.display = ((event.indexh == 0) && (event.indexv == 0))?'none' : 'block';
+  };
+
+  Reveal.addEventListener('ready', hideOnIndexSlide);
+  Reveal.addEventListener('slidechanged', hideOnIndexSlide);
+//  Reveal.addEventListener('slidechanged', function(event){
+//    var data = document.querySelector('.present').dataset;
+//    console.log(data.length > 0, data.length);
+//
+//      var timeout = data['await-timeout'] || 4000;
+//      var style = data['await-style'] || 'block';
+//
+//      var timeoutID = setTimeout(function(){
+//        var show = document.querySelector('.present .await');
+//        console.log();
+//        console.log("yeah!", show);
+//        if(show)
+//          show.style.display = style;
+//      }, timeout);
+//
+//      setTimeout(function (){
+//        clearTimeout(timeoutID);
+//      }, timeout + 1000);
+//  })
+</script>
+</body>
+</html>

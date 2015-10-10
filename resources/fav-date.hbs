@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Favourite dates:</title>
+  <link rel="stylesheet" href="{{globals.css-root}}">
+</head>
+<body>
+
+{{#is-error}}
+  <div class="error">{{../error}}</div>
+{{/is-error}}
+
+<table>
+  <thead>
+  <td>Day</td>
+  <td>Popularity</td>
+  </thead>
+  {{#results}}
+  <tr><td>{{day}}</td><td>{{count}}</td></tr>
+  {{/results}}
+</table>
+
+<form method="post" action="/fav/date/">
+  Day: <input name="day" type="text"/>
+  Month: <input name="month" type="text"/>
+  <button type="submit">submit</button>
+</form>
+
+</body>
+</html>

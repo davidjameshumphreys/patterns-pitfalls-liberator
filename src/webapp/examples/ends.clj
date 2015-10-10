@@ -6,7 +6,6 @@
   (resource {:available-media-types ["text/html"]
              :exists?               (fn [ctx] {:data "My data"})
              :handle-ok             (fn [{:keys [data] :as ctx}]
-                                      (println ctx)
                                       data)}))
 
 (defn- json? [ctx]

@@ -34,7 +34,6 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defn render-color [{:keys [data request error] :as ctx}]
   (let [render (:render-fn request)]
-    ;;(println ((get-bidi-path-for request) :color/get {} {:param "999"}))
     (render "fav-color"
             (merge {:results (represent-data data)}
                    (when error

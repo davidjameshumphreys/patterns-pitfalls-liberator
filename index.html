@@ -8,11 +8,11 @@
   <meta name="apple-mobile-web-app-capable" content="yes"/>
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
-  <link rel="stylesheet" href="./css/octicons.css"/>
-  <link rel="stylesheet" href="./css/reveal.css">
-  <link rel="stylesheet" href="./css/theme/simple.css" id="theme">
-  <link rel="stylesheet" href="./css/mine.css"/>
-  <link rel="stylesheet" href="./lib/css/zenburn.css">
+  <link rel="stylesheet" href="css/octicons.css"/>
+  <link rel="stylesheet" href="css/reveal.css">
+  <link rel="stylesheet" href="css/theme/simple.css" id="theme">
+  <link rel="stylesheet" href="css/mine.css"/>
+  <link rel="stylesheet" href="css/zenburn.css">
 
   <style>
     .await {display: none}
@@ -26,7 +26,7 @@
     document.getElementsByTagName('head')[0].appendChild(link);
   </script>
   <!--[if lt IE 9]>
-  <script src="./lib/js/html5shiv.js"></script><![endif]-->
+  <script src="js/lib/html5shiv.js"></script><![endif]-->
 </head>
 
 <body>
@@ -152,7 +152,7 @@
       <p>*Use some middleware to make coercion easier</p>
     </section>
     <section id="coercing-continued">
-      <p>Schema/check &amp; Liberator</p>
+      <p>Schema/coerce &amp; Liberator</p>
       <pre><code data-language="clojure" data-trim="yes">
 (defn make-malformed-coercer
   "A wrapper for checking the malformed state using Schema coercers.
@@ -195,14 +195,30 @@
          overrides))
       </code></pre>
     </section>
+    <section id="build-coercer">
+      <h2>Using it:</h2>
+      <pre><code>
+        (resource
+          (do-get
+            (coercer/coerce {:expected s/str})
+            (fn exists? [{:keys [request]}]
+              {:data (get-data (:db request))})
+            render-fn))
+      </code></pre>
+    </section>
     <section id="basic-post">
       <h2>A basic POST</h2>
       <p>Using a similar pattern</p>
-      <pre><code data-language="clojure" data-trim="yes">
-{:malformed?     (make-malformed-coercer check-vals-coercer)
- :exists?        exists?
- :post!          post!
- :post-redirect? post-redirect?}
+      <pre><code data-trim="yes">
+(defn do-post
+  "A simple post endpoint."
+  [check-vals-coercer exists? post! post-redirect? & {:as overrides}]
+  (merge post
+         {:malformed?     (make-malformed-coercer check-vals-coercer)
+          :exists?        exists?
+          :post!          post!
+          :post-redirect? post-redirect?}
+         overrides))
       </code></pre>
       <aside class="notes"></aside>
     </section>
@@ -256,6 +272,7 @@
     <section id="more-pitfalls">
       <h2>Pitfalls of the graph</h2>
       <p><code>service-available?</code> happens first, what about long requests?</p>
+      <pre><code>:as-response (fn [this ctx] build-ring-response)</code></pre>
       <aside class="notes">It's a tree.
       Remember, you can't go back.</aside>
     </section>
@@ -293,8 +310,8 @@
   </div>
 </div>
 
-<script src="./lib/js/head.min.js"></script>
-<script src="./js/reveal.js"></script>
+<script src="js/lib/head.min.js"></script>
+<script src="js/reveal.js"></script>
 <script>
   Reveal.initialize({
     controls: true,
@@ -306,20 +323,20 @@
 
     dependencies: [
       {
-        src: 'lib/js/classList.js', condition: function () {
+        src: './js/lib/classList.js', condition: function () {
         return !document.body.classList;
       }
       },
       {
-        src: 'plugin/highlight/highlight.js', async: true, condition: function () {
+        src: './js/plugin/highlight/highlight.js', async: true, condition: function () {
         return !!document.querySelector('pre code');
       }, callback: function () {
         hljs.configure({languages: ['clojure']});
         hljs.initHighlightingOnLoad();
       }
       },
-      {src: 'plugin/zoom-js/zoom.js', async: true},
-      {src: 'plugin/notes/notes.js', async: true}
+      {src: './js/plugin/zoom-js/zoom.js', async: true},
+      {src: './js/plugin/notes/notes.js', async: true}
     ]
   });
 
@@ -333,25 +350,6 @@
 
   Reveal.addEventListener('ready', hideOnIndexSlide);
   Reveal.addEventListener('slidechanged', hideOnIndexSlide);
-//  Reveal.addEventListener('slidechanged', function(event){
-//    var data = document.querySelector('.present').dataset;
-//    console.log(data.length > 0, data.length);
-//
-//      var timeout = data['await-timeout'] || 4000;
-//      var style = data['await-style'] || 'block';
-//
-//      var timeoutID = setTimeout(function(){
-//        var show = document.querySelector('.present .await');
-//        console.log();
-//        console.log("yeah!", show);
-//        if(show)
-//          show.style.display = style;
-//      }, timeout);
-//
-//      setTimeout(function (){
-//        clearTimeout(timeoutID);
-//      }, timeout + 1000);
-//  })
 </script>
 </body>
 </html>

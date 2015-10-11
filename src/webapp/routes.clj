@@ -19,7 +19,7 @@ with middleware."
             [webapp.render-engine :refer [output-render]]))
 
 (defn- idx [_]
-  (resource-response "/index.html"))
+  (resource-response "/main.html"))
 
 (def ^{:private true
        :doc     "This allows us to refer to all of our routes by keywords."}
@@ -70,7 +70,7 @@ with middleware."
 (defn wrap-database
   [handler db]
   (fn [req]
-    (let [modified-req (assoc req :db db)]
+    (let [modified-req (assoc req :database (:database db))]
       (handler modified-req))))
 
 (defn the-application
@@ -80,8 +80,8 @@ with middleware."
   (-> #'server-routes
       (wrap-trace :ui true)  ;; <- liberator trace
       (wrap-renderer (-> component-settings :render :global-vars))
-      (wrap-database (-> component-settings :db))
-      wrap-keyword-params
+      (wrap-database (-> component-settings :database))
+      wrap-keyword-params    ;; <- param helpers for schema validation
       wrap-params
       wrap-json-params
       (wrap-bidi-handlers build-routes handlers)

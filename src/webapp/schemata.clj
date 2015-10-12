@@ -100,3 +100,7 @@
         (catch Exception e
           (error e)))
       first-check)))
+
+
+(def valid-name
+  (coerce/coercer {:id (schema/both schema/Str (schema/pred #(>= 24 (count %))))} {schema/Str (coerce/safe str/trim)}))

@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Favourite colors:</title>
+  <link rel="stylesheet" href="{{globals.css-root}}">
+</head>
+<body>
+
+{{#is-error}}
+  <div class="error">{{../error}}</div>
+{{/is-error}}
+
+<table>
+  <thead>
+  <td>Color</td>
+  <td>Popularity</td>
+  </thead>
+  {{#results}}
+  <tr><td>{{id}}</td><td>{{popularity}}</td></tr>
+  {{/results}}
+</table>
+
+<form method="post" action="/fav/name/">
+  Name: <input name="id" type="text"/>
+  <button type="submit">submit</button>
+</form>
+
+</body>
+</html>

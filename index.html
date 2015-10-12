@@ -37,7 +37,7 @@
         Liberator</h2>
       <p>
         <small>David James Humphreys (Juxter) [<a href="http://twitter.com/davidjumphreys">@davidjhumphreys</a>]</small><br/>
-        <small><span class="octicon octicon-mark-github" style="font-family: 'octicons';"></span>.com/davidjameshumphreys [<a href="https://davidjameshumphreys.github.io/patterns-pitfalls-liberator/">slides</a>]</small>
+        <small><span class="octicon octicon-mark-github" style="font-family: 'octicons';"></span>/davidjameshumphreys/patterns-pitfalls-liberator/ [<a href="https://davidjameshumphreys.github.io/patterns-pitfalls-liberator/">slides</a>]</small>
       </p>
       <img src="images/juxt-w.png" width="200" style="border: 0; -webkit-box-shadow: none"/>
     </section>
@@ -202,7 +202,7 @@
           (do-get
             (coercer/coerce {:expected s/str})
             (fn exists? [{:keys [request]}]
-              {:data (get-data (:db request))})
+              {:data (get-data (:database request))})
             render-fn))
       </code></pre>
     </section>
@@ -238,7 +238,7 @@
     </section>
     <section id="middleware-example">
       <h2>Middleware</h2>
-      <p>No <code>*datbase*</code> globals please</p>
+      <p>No <code>*database*</code> globals please</p>
       <pre><code data-language="clojure" data-trim="yes" class="stretch">
 (defn the-application
   "All of the webapp routes and middleware. By defining in this way we
@@ -248,8 +248,8 @@
   (-> #'server-routes
       (wrap-trace :ui true)  ;; <- liberator trace
       (wrap-renderer (-> component-settings :render :global-vars))
-      (wrap-database (-> component-settings :db))
-      wrap-keyword-params
+      (wrap-database (-> component-settings :database))
+      wrap-keyword-params    ;; <- param helpers for schema validation
       wrap-params
       wrap-json-params
       (wrap-bidi-handlers build-routes handlers)))
@@ -298,9 +298,10 @@
     <section id="fin">
       <h2><span>Fin</span><span class="fragment">)</span></h2>
       <p>
-        <small><span class="octicon octicon-mark-github" style="font-family: 'octicons';"></span>.com/davidjameshumphreys
+        <small><span class="octicon octicon-mark-github" style="font-family: 'octicons';"></span>/davidjameshumphreys/patterns-pitfalls-liberator/
           [<a href="https://davidjameshumphreys.github.io/patterns-pitfalls-liberator/">slides</a>]
-        </small></p>
+        </small>
+      </p>
     </section>
   </div>
 

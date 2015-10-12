@@ -1,0 +1,9 @@
+body {
+    padding: 15px;
+}
+
+.error {
+    background: #a64e3e;
+    width: 300px;
+    padding: 15px;
+}

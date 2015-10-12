@@ -197,13 +197,16 @@
     </section>
     <section id="build-coercer">
       <h2>Using it</h2>
-      <pre><code>
-        (resource
-          (do-get
-            (coercer/coerce {:expected s/str})
-            (fn exists? [{:keys [request]}]
-              {:data (get-data (:database request))})
-            render-fn))
+      <pre><code data-trim="yes">
+(resource
+  (do-get
+    (fn [ctx] (-> ctx
+                  :request
+                  :params
+                  (coercer/coerce {:expected schema/Str} {mapping})))
+    (fn exists? [{:keys [request]}]
+      {:data (get-data (:database request))})
+    render-fn))
       </code></pre>
     </section>
     <section id="basic-post">

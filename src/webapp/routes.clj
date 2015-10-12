@@ -33,7 +33,8 @@ with middleware."
    :name/get   #'name-get
    :name/post  #'name-post
    :simple/get #'webapp.examples.ends/simple-get
-   :simple/get-type #'webapp.examples.ends/simple-get-with-type})
+   :simple/get-type #'webapp.examples.ends/simple-get-with-type
+   :simple/not-found #'webapp.examples.ends/simple-not-found})
 
 (defn- build-routes
   "Given the handler map, build the routes."
@@ -44,7 +45,9 @@ with middleware."
            ["fav/date/" (:date/get hm)]
            ["fav/name/" (:name/get hm)]
            ["simple/" (:simple/get hm)]
-           ["simple-type/" (:simple/get-type hm)]]
+           ["simple-type/" (:simple/get-type hm)]
+           ["simple-not-found/" (:simple/not-found hm)]
+           ]
     :post [["fav/color/" (:color/post hm)]
            ["fav/date/" (:date/post hm)]
            ["fav/name/" (:name/post hm)]

@@ -23,3 +23,13 @@
                                         {:data data
                                          :is-json true}
                                         data))}))
+
+(def simple-not-found
+  (resource {:available-media-types ["text/html" "application/json"]
+             :allowed-methods       [:get]
+             :exists?               (fn exists [ctx] nil)
+             :handle-ok             (fn ok [{:keys [data] :as ctx}]
+                                      (if (json? ctx)
+                                        {:data    data
+                                         :is-json true}
+                                        data))}))

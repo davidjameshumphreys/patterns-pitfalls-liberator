@@ -1,0 +1,7 @@
+{
+ ;; the folder with the migrators
+ :migrators    {:sql-mig "migrators/sql"}
+ ;; the fn to run
+ :seeds        {:sql-seed "seeds.sql/run"}
+ :databases    {:sql-dev {:type :sql, :url "jdbc:h2:file:./h2/dev"}}
+ :environments {:dev [{:db :sql-dev, :migrator :sql-mig, :seed :sql-seed}]}}

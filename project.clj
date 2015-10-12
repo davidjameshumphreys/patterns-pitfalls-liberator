@@ -34,6 +34,9 @@
 
                  [com.h2database/h2 "1.4.189"]
                  [com.mchange/c3p0 "0.9.5.1"]
-                 [joplin.core "0.2.12"]
-                 [joplin.jdbc "0.2.12"]
-                 [honeysql "0.6.1"]])
+                 [joplin.core "0.3.3"]
+                 [joplin.jdbc "0.3.3"]
+                 [honeysql "0.6.1"]]
+
+  :aliases {"seed" ["run" "-m" "joplin-alias/seed"]
+            "up"   ["run" "-m" "joplin-alias/migrate" "dev" "sql-dev"]})
